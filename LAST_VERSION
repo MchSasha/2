@@ -1,0 +1,156 @@
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <ctime>  
+
+using namespace std;
+
+void quicksort(vector <int>& index, vector <int>& mas, int first, int last);
+void dfs(bool& way,bool& repeat,vector <int>& max, const int& k_room, vector<bool>& visited, vector<vector <int>>& inf_doors, int rooms, int doors);
+void maze(string in, string out);
+
+int main()
+{
+	srand(time(0));
+	maze("20", "r20.txt");
+	cout << "runtime = " << clock() / 1000.0 << endl;
+	
+	}
+void maze(string in, string out) {
+	vector <vector <int>> inf_doors;
+	ifstream fInput;
+	fInput.open(in);
+	string row;
+	while (getline(fInput, row))
+	{
+		stringstream inf_door(row);
+		string dr;
+		vector<int> doors;
+		while (getline(inf_door, dr, ' '))
+			doors.push_back(stoi(dr));
+		inf_doors.push_back(doors);
+	}
+
+
+
+	int rooms = inf_doors[0][0];  int doors = inf_doors[0][1];
+	vector <bool> visited(rooms);
+	vector <int> max{};
+	bool repeat = 0;
+	bool way = 0;
+	dfs(way, repeat, max, 1, visited, inf_doors, rooms, doors);
+	
+		ofstream fOutput;
+	fOutput.open(out);
+	if (max.size() != 0 && repeat == 0 && way == 1) {
+		int sum = 0;
+		for (int i : max)
+		{
+			sum += i;
+		}
+		fOutput << sum;
+		fOutput.close();
+	}
+	if((max.size() == 0 && doors !=0)|| repeat ==1) {
+		fOutput << ":)";
+		fOutput.close();
+		return;
+	}
+	
+	if (way==0 || doors == 0) {
+		fOutput << ":(";
+		fOutput.close();
+		return;
+	}
+}
+
+void dfs(bool& way, bool& repeat, vector <int>& max, const int& k_room, vector<bool>& visited, vector<vector <int>>& inf_doors, int rooms, int doors)
+{
+	vector <int> weight_of_certain_door{};
+	vector <int> index{};
+	visited[k_room - 1] = true;
+	if (k_room != rooms) {
+		for (int x = 1; x < doors + 1; x++) {
+			if (inf_doors[x][0] == k_room) {
+				weight_of_certain_door.push_back(inf_doors[x][2]);
+				index.push_back(inf_doors[x][1]);
+				inf_doors[x] = { 0, 0, 0 };
+			}
+		}
+		if (weight_of_certain_door.size() == 0) 
+			return;
+
+
+		if (weight_of_certain_door.size() == 2)
+			if (weight_of_certain_door[0] > weight_of_certain_door[1]) {
+				swap(weight_of_certain_door[0], weight_of_certain_door[1]);
+				swap(index[0], index[1]);
+			}
+
+
+		if (weight_of_certain_door.size() > 2)
+			quicksort(index, weight_of_certain_door, 0, weight_of_certain_door.size() - 1);
+
+		int max_weight = weight_of_certain_door[weight_of_certain_door.size() - 1];
+		max.push_back(max_weight);
+		int next_room = index[index.size() - 1];
+			if (!visited[next_room - 1])
+				dfs(way, repeat, max, next_room, visited, inf_doors, rooms, doors);
+			else {
+				repeat = 1;
+				return;
+			}
+		
+	}
+	if (k_room == rooms) {
+		way = 1;
+		int counter = 0;
+		for (int x = 1; x < doors + 1; x++) {
+			if (inf_doors[x][0] == k_room) {
+				int q = inf_doors[x][1];
+				for (int a = 1; a < doors + 1; a++) {
+					if (inf_doors[a][0] == q) {
+						counter++;
+					}
+					
+				}
+				
+				
+			}
+		}
+		if (counter > 0) {
+			max.clear();
+			return;
+		}
+	}
+	
+}
+
+void quicksort(vector <int>& index, vector <int>& mas, int first, int last)
+{
+	int mid, count;
+	int f = first, l = last;
+	mid = mas[(f + l) / 2]; //вычисление опорного элемента
+	do
+	{
+		while (mas[f] < mid) f++;
+		while (mas[l] > mid) l--;
+		if (f <= l) //перестановка элементов
+		{
+			swap(mas[f], mas[l]);
+			swap(index[f], index[l]);
+			f++;
+			l--;
+		}
+	} while (f < l);
+	if (first < l) quicksort(index, mas, first, l);
+	if (f < last) quicksort(index, mas, f, last);
+}
+/*
+	for (int j : inf_doors[k])
+	{
+		if (!visited[j - 1])
+			dfs(j - 1, visited, inf_doors);
+	}*/
+
